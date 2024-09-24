@@ -9,10 +9,10 @@ public class ComparisonExperiment {
         String csvFile = "results.csv"; // Nome del file CSV
         
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
-            writer.write("NumberOfClients,AverageSuccessGreedyDistance,AverageSuccessGreedyCDF,AverageCostGreedyDistance,AverageCostGreedyCDF\n");
+            writer.write("NumberOfClients,AverageSuccessGreedyDistance,AverageSuccessGreedyCDF,AverageSuccessRandom,AverageCostGreedyDistance,AverageCostGreedyCDF,AverageCostRandom\n");
             
             // Define the range for the number of clients
-            int minClients = 5; // Minimum number of clients
+            int minClients = 10; // Minimum number of clients
             int maxClients = 50; // Maximum number of clients
             int step = 1; // Step size for incrementing clients
             
@@ -37,9 +37,18 @@ public class ComparisonExperiment {
                 // Run greedy algorithm for CDF
                 System.out.println("\nRunning greedy algorithm for CDF...");
                 float[] avgsGreedyCDF = runExperiment(clients, cloudProviders, 0.2f, 0.8f);
+
+                // Reset clients and CPs for the next experiment
+                clients = createClients(nClients, random);
+                cloudProviders = createCloudProviders(clients, random);
+                
+                // Run random assignment algorithm
+                System.out.println("\nRunning random assignment algorithm...");
+                float[] avgsRandom = runRandomExperiment(clients, cloudProviders);
+
                 
                 // Write results to CSV
-                writer.write(nClients + "," + avgsGreedyDistance[0] + "," + avgsGreedyCDF[0] + "," + avgsGreedyDistance[1] + "," + avgsGreedyCDF[1] + "\n");
+                writer.write(nClients + "," + avgsGreedyDistance[0] + "," + avgsGreedyCDF[0] + "," + avgsRandom[0] + "," + avgsGreedyDistance[1] + "," + avgsGreedyCDF[1] + "," + avgsRandom[1] + "\n");
                 
                 System.out.println("----------------------------------------");
             }
@@ -65,7 +74,7 @@ public class ComparisonExperiment {
 
     private static List<CloudProvider> createCloudProviders(List<Client> clients, Random random) {
         List<CloudProvider> cloudProviders = new ArrayList<>();
-        List<Integer> nNodesPerCloudProvider = Arrays.asList(1, 5, 10);
+        List<Integer> nNodesPerCloudProvider = Arrays.asList(1, 10, 20);
         List<Integer> capacityPerCloudProvider = Arrays.asList(5, 2, 1);
         List<Float> cdfPerCloudProvider = Arrays.asList(0.8f, 0.5f, 0.1f);
         List<Float> distancePerCloudProvider = Arrays.asList(150f, 100f, 50f);
@@ -101,6 +110,23 @@ public class ComparisonExperiment {
         System.out.println("Average Success: " + avgSuccess);
         float avgCost = calculateAverageCost(clients);
         System.out.println("Average Cost: " + avgCost);
+        return new float[]{avgSuccess, avgCost};
+    }
+
+    private static float[] runRandomExperiment(List<Client> clients, List<CloudProvider> cloudProviders) {
+        // Set preferences for Clients randomly
+        for (Client client : clients) {
+            client.evaluatePreferencesRandomly(cloudProviders);
+        }
+
+        // Run the matching algorithm
+        MatchingAlgorithm.matchClientsToEdgeNodes(clients, cloudProviders);
+
+        // Calculate and return average success
+        float avgSuccess = calculateAverageSuccess(clients);
+        System.out.println("Average Success (Random): " + avgSuccess);
+        float avgCost = calculateAverageCost(clients);
+        System.out.println("Average Cost (Random): " + avgCost);
         return new float[]{avgSuccess, avgCost};
     }
 
