@@ -52,6 +52,7 @@ public class Client {
         return !preferenceList.isEmpty();
     }
 
+    // Create Preference Lists for Clients based on EdgeNode CDF and Distance
     public void evaluatePreferences(List<CloudProvider> cloudProviders, float weightDistance, float weightProbability) {
         preferenceList = new ArrayList<>();
         Map<EdgeNode, Float> nodePreference = new HashMap<>();
@@ -101,4 +102,15 @@ public class Client {
             preferenceList.add(entry.getKey());
         }
     }
+
+    // Create random Preferce Lists for Clients
+    public void evaluatePreferencesRandomly(List<CloudProvider> cloudProviders) {
+        preferenceList = new ArrayList<>();
+        
+        for (CloudProvider provider : cloudProviders) {
+            preferenceList.addAll(provider.getEdgeNodes());
+        }
+        Collections.shuffle(preferenceList);
+    }
+    
 }
